@@ -10,6 +10,8 @@ import time
 import wave
 from pathlib import Path
 
+from PySide6.QtCore import QMimeData, QPoint, Qt, QUrl
+from PySide6.QtGui import QDragEnterEvent, QDropEvent
 from PySide6.QtWidgets import QApplication
 
 from main import PlayerWindow, ffmpeg_executable
@@ -49,7 +51,18 @@ def main() -> None:
         samples = make_samples(Path(directory))
         window = PlayerWindow()
         window.fade_seconds.setValue(1)
-        window.add_files(samples)
+        assert all(button.property("roundControl") for button in
+                   (window.prev_button, window.play_button, window.stop_button, window.next_button))
+        assert all(format_name in window.drop_hint.text() for format_name in ("MP3", "WMA", "WAV"))
+        mime = QMimeData()
+        mime.setUrls([QUrl.fromLocalFile(str(samples[0]))])
+        enter = QDragEnterEvent(QPoint(5, 5), Qt.CopyAction, mime, Qt.LeftButton, Qt.NoModifier)
+        window.list_widget.dragEnterEvent(enter)
+        assert enter.isAccepted(), "Playlist rejected WAV drag"
+        drop = QDropEvent(QPoint(5, 5), Qt.CopyAction, mime, Qt.LeftButton, Qt.NoModifier)
+        window.list_widget.dropEvent(drop)
+        assert drop.isAccepted(), "Playlist rejected WAV drop"
+        window.add_files(samples[1:])
         assert len(window.paths) == 3
         for index, path in enumerate(samples):
             window.load_track(index)

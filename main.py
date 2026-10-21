@@ -35,12 +35,33 @@ def ffmpeg_executable() -> str | None:
         return shutil.which(executable)
 
 
+class DropListWidget(QListWidget):
+    def __init__(self, add_files) -> None:
+        super().__init__()
+        self.add_files = add_files
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if any(url.isLocalFile() and Path(url.toLocalFile()).suffix.lower() in SUPPORTED
+               for url in event.mimeData().urls()):
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dragMoveEvent(self, event) -> None:
+        event.acceptProposedAction()
+
+    def dropEvent(self, event: QDropEvent) -> None:
+        self.add_files(Path(url.toLocalFile()) for url in event.mimeData().urls() if url.isLocalFile())
+        event.acceptProposedAction()
+
+
 class PlayerWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("hifamily player")
         self.resize(860, 550)
-        self.setMinimumSize(620, 460)
+        self.setMinimumSize(720, 500)
         self.setAcceptDrops(True)
 
         self.audio = QAudioOutput(self)
@@ -84,7 +105,10 @@ class PlayerWindow(QMainWindow):
         brand.setObjectName("brand")
         header.addWidget(brand)
         header.addStretch()
-        self.add_button = QPushButton("＋  파일 추가")
+        self.add_button = QPushButton("+")
+        self.add_button.setObjectName("roundSmall")
+        self.add_button.setToolTip("오디오 파일 추가")
+        self.add_button.setAccessibleName("파일 추가")
         self.add_button.clicked.connect(self.choose_files)
         header.addWidget(self.add_button)
         outer.addLayout(header)
@@ -95,11 +119,11 @@ class PlayerWindow(QMainWindow):
         display_layout.setContentsMargins(20, 18, 20, 18)
         eyebrow = QLabel("NOW PLAYING")
         eyebrow.setObjectName("eyebrow")
-        self.title_label = QLabel("재생할 오디오 파일을 추가하세요")
+        self.title_label = QLabel("오디오 파일을 끌어 놓거나 + 버튼으로 추가하세요")
         self.title_label.setObjectName("trackTitle")
         self.title_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.title_label.setWordWrap(True)
-        self.detail_label = QLabel("MP3  ·  WMA  ·  WAV")
+        self.detail_label = QLabel("재생 가능한 형식: MP3 · WMA · WAV")
         self.detail_label.setObjectName("detail")
         display_layout.addWidget(eyebrow)
         display_layout.addWidget(self.title_label)
@@ -119,13 +143,18 @@ class PlayerWindow(QMainWindow):
         outer.addLayout(seek_row)
 
         controls = QHBoxLayout()
-        self.prev_button = QPushButton("⏮")
-        self.play_button = QPushButton("▶  재생")
+        self.prev_button = QPushButton("◀◀")
+        self.play_button = QPushButton("▶")
         self.play_button.setObjectName("primary")
-        self.stop_button = QPushButton("■  정지")
-        self.next_button = QPushButton("⏭")
+        self.stop_button = QPushButton("■")
+        self.next_button = QPushButton("▶▶")
         for button in (self.prev_button, self.play_button, self.stop_button, self.next_button):
+            button.setProperty("roundControl", True)
             controls.addWidget(button)
+        for button, name in ((self.prev_button, "이전 곡"), (self.play_button, "재생 또는 일시정지"),
+                             (self.stop_button, "정지"), (self.next_button, "다음 곡")):
+            button.setToolTip(name)
+            button.setAccessibleName(name)
         self.prev_button.clicked.connect(self.previous_track)
         self.play_button.clicked.connect(self.toggle_play)
         self.stop_button.clicked.connect(self.stop_with_fade)
@@ -147,26 +176,38 @@ class PlayerWindow(QMainWindow):
         self.fade_seconds.setValue(3)
         self.fade_seconds.setSuffix(" 초")
         fades.addWidget(self.fade_seconds)
-        self.fade_in_button = QPushButton("↗  페이드 인")
-        self.fade_out_button = QPushButton("↘  페이드 아웃")
+        self.fade_in_button = QPushButton("↗")
+        self.fade_out_button = QPushButton("↘")
+        for button, name in ((self.fade_in_button, "페이드 인"), (self.fade_out_button, "페이드 아웃")):
+            button.setObjectName("roundSmall")
+            button.setToolTip(name)
+            button.setAccessibleName(name)
         self.fade_in_button.clicked.connect(self.fade_in)
         self.fade_out_button.clicked.connect(self.fade_out)
         fades.addWidget(self.fade_in_button)
+        fades.addWidget(QLabel("페이드 인"))
         fades.addWidget(self.fade_out_button)
+        fades.addWidget(QLabel("페이드 아웃"))
         fades.addStretch()
         outer.addLayout(fades)
 
         list_header = QHBoxLayout()
         list_header.addWidget(QLabel("재생목록"))
         list_header.addStretch()
-        remove = QPushButton("선택 삭제")
+        remove = QPushButton("−")
+        remove.setObjectName("roundSmall")
+        remove.setToolTip("선택한 파일 삭제")
+        remove.setAccessibleName("선택 삭제")
         remove.clicked.connect(self.remove_selected)
         list_header.addWidget(remove)
         outer.addLayout(list_header)
-        self.list_widget = QListWidget()
+        self.drop_hint = QLabel("여기에 파일을 끌어 놓으세요  ·  재생 가능: MP3 / WMA / WAV")
+        self.drop_hint.setObjectName("dropHint")
+        outer.addWidget(self.drop_hint)
+        self.list_widget = DropListWidget(self.add_files)
         self.list_widget.itemDoubleClicked.connect(lambda item: self.load_track(self.list_widget.row(item)))
         outer.addWidget(self.list_widget, 1)
-        self.status = QLabel("준비됨")
+        self.status = QLabel("MP3, WMA, WAV 파일을 추가하면 재생할 수 있습니다")
         self.status.setObjectName("status")
         outer.addWidget(self.status)
 
@@ -183,8 +224,16 @@ class PlayerWindow(QMainWindow):
                           padding: 9px 13px; min-height: 18px; }
             QPushButton:hover { background: #36515b; }
             QPushButton:pressed { background: #1b7774; }
+            QPushButton[roundControl="true"] { min-width: 54px; max-width: 54px;
+                min-height: 54px; max-height: 54px; padding: 0; border-radius: 28px;
+                font-size: 15px; font-weight: 700; }
+            QPushButton#roundSmall { min-width: 36px; max-width: 36px;
+                min-height: 36px; max-height: 36px; padding: 0; border-radius: 19px;
+                font-size: 18px; font-weight: 700; }
             QPushButton#primary { background: #46c7b2; color: #09201f; font-weight: 700; border: 0; }
             QPushButton#primary:hover { background: #78dec9; }
+            QLabel#dropHint { color: #a9c2c9; background: #17212b;
+                border: 1px dashed #53727c; border-radius: 7px; padding: 8px; }
             QListWidget { background: #17212b; border: 1px solid #30434f; border-radius: 8px;
                           padding: 5px; outline: 0; }
             QListWidget::item { padding: 7px; border-radius: 4px; }
@@ -214,6 +263,8 @@ class PlayerWindow(QMainWindow):
             self.status.setText(f"{added}개 파일 추가됨")
             if self.current < 0:
                 self.load_track(0, autoplay=False)
+        else:
+            self.status.setText("추가 가능한 오디오 형식: MP3, WMA, WAV")
 
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
         if any(url.isLocalFile() and Path(url.toLocalFile()).suffix.lower() in SUPPORTED
@@ -243,7 +294,7 @@ class PlayerWindow(QMainWindow):
         self.list_widget.setCurrentRow(index)
         self.title_label.setText(path.stem)
         self.detail_label.setText(f"{path.suffix[1:].upper()}  ·  {path.parent}")
-        self.play_button.setText("▶  재생")
+        self.play_button.setText("▶")
         self.elapsed.setText("00:00")
         self.total.setText("00:00")
         self.seek.setRange(0, 0)
@@ -292,7 +343,7 @@ class PlayerWindow(QMainWindow):
         self.auto_faded = False
         self.audio.setVolume(0.0)
         self.player.play()
-        self.play_button.setText("Ⅱ  일시정지")
+        self.play_button.setText("Ⅱ")
         self._begin_fade(self.volume.value() / 100, "")
         self.status.setText("페이드 인" if self.fade_seconds.value() else "재생 중")
 
@@ -307,7 +358,7 @@ class PlayerWindow(QMainWindow):
         if self.player.playbackState() == QMediaPlayer.PlayingState:
             self._cancel_fade()
             self.player.pause()
-            self.play_button.setText("▶  재생")
+            self.play_button.setText("▶")
             self.status.setText("일시정지")
         elif self.player.source().isEmpty():
             self.load_track(self.current)
@@ -324,7 +375,7 @@ class PlayerWindow(QMainWindow):
         self._cancel_fade()
         self.player.stop()
         self.audio.setVolume(self.volume.value() / 100)
-        self.play_button.setText("▶  재생")
+        self.play_button.setText("▶")
         self.status.setText("정지")
 
     def fade_in(self) -> None:
@@ -373,7 +424,7 @@ class PlayerWindow(QMainWindow):
             self._stop_now()
         elif action == "pause":
             self.player.pause()
-            self.play_button.setText("▶  재생")
+            self.play_button.setText("▶")
             self.status.setText("페이드 아웃 완료 · 일시정지")
         elif action == "next":
             self.next_track()
@@ -418,8 +469,8 @@ class PlayerWindow(QMainWindow):
             self._stop_now()
             self.player.setSource(QUrl())
             self.current = -1
-            self.title_label.setText("재생할 오디오 파일을 추가하세요")
-            self.detail_label.setText("MP3  ·  WMA  ·  WAV")
+            self.title_label.setText("오디오 파일을 끌어 놓거나 + 버튼으로 추가하세요")
+            self.detail_label.setText("재생 가능한 형식: MP3 · WMA · WAV")
         elif row < self.current:
             self.current -= 1
         if self.current < 0 and self.paths:
