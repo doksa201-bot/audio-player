@@ -45,7 +45,7 @@ def make_samples(folder: Path) -> list[Path]:
 
 def main() -> None:
     app = QApplication([])
-    with tempfile.TemporaryDirectory(prefix="aural-smoke-") as directory:
+    with tempfile.TemporaryDirectory(prefix="hifamily-player-smoke-") as directory:
         samples = make_samples(Path(directory))
         window = PlayerWindow()
         window.fade_seconds.setValue(1)

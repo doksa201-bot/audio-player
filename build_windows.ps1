@@ -13,7 +13,7 @@ $python = Join-Path $PSScriptRoot '.venv\Scripts\python.exe'
 & $python -m pip install -r requirements.txt pyinstaller
 if ($LASTEXITCODE -ne 0) { throw '패키지 설치에 실패했습니다.' }
 
-& $python -m PyInstaller --noconfirm --clean --windowed --onedir --name AuralDeck --collect-all imageio_ffmpeg main.py
+& $python -m PyInstaller --noconfirm --clean --windowed --onedir --name 'hifamily player' --collect-all imageio_ffmpeg main.py
 if ($LASTEXITCODE -ne 0) { throw '실행 파일 빌드에 실패했습니다.' }
 
-Write-Host "완료: $PSScriptRoot\dist\AuralDeck\AuralDeck.exe"
+Write-Host "완료: $PSScriptRoot\dist\hifamily player\hifamily player.exe"

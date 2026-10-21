@@ -38,7 +38,7 @@ def ffmpeg_executable() -> str | None:
 class PlayerWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("Aural Deck")
+        self.setWindowTitle("hifamily player")
         self.resize(860, 550)
         self.setMinimumSize(620, 460)
         self.setAcceptDrops(True)
@@ -49,7 +49,7 @@ class PlayerWindow(QMainWindow):
         self.audio.setVolume(0.75)
         self.paths: list[Path] = []
         self.current = -1
-        self.temp = tempfile.TemporaryDirectory(prefix="aural-deck-")
+        self.temp = tempfile.TemporaryDirectory(prefix="hifamily-player-")
         self.convert_process: QProcess | None = None
         self.converting = False
         self.play_after_conversion = False
@@ -80,7 +80,7 @@ class PlayerWindow(QMainWindow):
         outer.setSpacing(14)
 
         header = QHBoxLayout()
-        brand = QLabel("AURAL  /  DECK")
+        brand = QLabel("hifamily player")
         brand.setObjectName("brand")
         header.addWidget(brand)
         header.addStretch()
@@ -468,7 +468,7 @@ class PlayerWindow(QMainWindow):
 
 def main() -> int:
     app = QApplication(sys.argv)
-    app.setApplicationName("Aural Deck")
+    app.setApplicationName("hifamily player")
     window = PlayerWindow()
     window.show()
     return app.exec()

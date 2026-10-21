@@ -1,4 +1,4 @@
-# Aural Deck
+# hifamily player
 
 JetAudio의 전통적인 재생기 배치를 참고한 독립적인 데스크톱 오디오 플레이어입니다. MP3, WAV, WMA 파일과 페이드 인·아웃을 지원합니다.
 
@@ -10,9 +10,9 @@ Windows PC에서 Python 3.11을 설치한 다음 PowerShell에서 다음을 실�
 ./build_windows.ps1
 ```
 
-완성 파일은 `dist\AuralDeck\AuralDeck.exe`입니다. 폴더 전체를 함께 옮겨야 합니다. WMA 변환용 FFmpeg는 `imageio-ffmpeg` 패키지의 플랫폼별 실행 파일을 함께 포함합니다.
+완성 파일은 `dist\hifamily player\hifamily player.exe`입니다. 폴더 전체를 함께 옮겨야 합니다. WMA 변환용 FFmpeg는 `imageio-ffmpeg` 패키지의 플랫폼별 실행 파일을 함께 포함합니다.
 
-GitHub에서 `v`로 시작하는 태그를 푸시하면 `.github/workflows/windows-release.yml`이 Windows에서 세 가지 형식과 페이드를 검사하고 ZIP 실행 파일을 Release에 올립니다. 수동 실행 시에는 GitHub Actions의 `AuralDeck-Windows-x64` 아티팩트로 결과를 확인할 수 있습니다.
+GitHub에서 `v`로 시작하는 태그를 푸시하면 `.github/workflows/windows-release.yml`이 Windows에서 세 가지 형식과 페이드를 검사하고 ZIP 실행 파일을 Release에 올립니다. 수동 실행 시에는 GitHub Actions의 `hifamily-player-Windows-x64` 아티팩트로 결과를 확인할 수 있습니다.
 
 ## 소스에서 실행
 

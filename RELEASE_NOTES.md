@@ -1,11 +1,11 @@
-# Aural Deck 0.1.0 — Windows x64
+# hifamily player 0.2.0 — Windows x64
 
 MP3, WMA, WAV 오디오 파일을 재생하는 데스크톱 플레이어입니다. 재생목록, 탐색, 음량 조절, 페이드 인·아웃 시간 조절을 지원합니다.
 
 ## 설치
 
-1. `AuralDeck-Windows-x64.zip`을 다운로드해 압축을 풉니다.
-2. 폴더 안의 `AuralDeck.exe`를 실행합니다. 폴더 내부 파일을 함께 보관해야 합니다.
+1. `hifamily-player-Windows-x64.zip`을 다운로드해 압축을 풉니다.
+2. 폴더 안의 `hifamily player.exe`를 실행합니다. 폴더 내부 파일을 함께 보관해야 합니다.
 
 WMA 변환에 필요한 FFmpeg는 배포 폴더에 포함됩니다. 프로그램은 설치 과정 없이 실행됩니다.
 
